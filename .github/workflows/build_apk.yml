@@ -1,0 +1,39 @@
+name: Build Android App
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          channel: 'stable'
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Generate App Icons
+        # This takes your assets/logo.png and creates the official phone icons
+        run: dart run flutter_launcher_icons
+
+      - name: Build APK
+        # No-tree-shake-icons prevents font-related crashes
+        run: flutter build apk --release --no-tree-shake-icons
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: best-verifier-pro-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
