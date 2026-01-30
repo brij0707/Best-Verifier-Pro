@@ -1,0 +1,22 @@
+apply plugin: 'com.android.application'
+apply from: "https://raw.githubusercontent.com/flutter/flutter/master/packages/flutter_tools/gradle/flutter.gradle"
+
+android {
+    compileSdkVersion 34
+    namespace "com.innomind.bestverifier"
+
+    defaultConfig {
+        applicationId "com.innomind.bestverifier"
+        minSdkVersion 21
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    buildTypes {
+        release {
+            // Using debug signing for now so you can test immediately
+            signingConfig signingConfigs.debug
+        }
+    }
+}
