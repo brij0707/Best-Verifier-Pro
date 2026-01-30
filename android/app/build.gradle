@@ -2,21 +2,35 @@ apply plugin: 'com.android.application'
 apply from: "https://raw.githubusercontent.com/flutter/flutter/master/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
+    // Required for v2 embedding and modern plugins
     compileSdkVersion 34
     namespace "com.innomind.bestverifier"
 
     defaultConfig {
         applicationId "com.innomind.bestverifier"
-        minSdkVersion 21
+        minSdkVersion 21 // Supports 98% of active Android devices
         targetSdkVersion 34
         versionCode 1
         versionName "1.0.0"
+        
+        // Fixes "DexIndexOverflowException" when using many plugins
+        multiDexEnabled true 
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     buildTypes {
         release {
-            // Using debug signing for now so you can test immediately
+            // Allows testing the release APK without full signing keys
             signingConfig signingConfigs.debug
         }
     }
+}
+
+dependencies {
+    // Supports the MultiDexApplication file we created
+    implementation 'androidx.multidex:multidex:2.0.1'
 }
