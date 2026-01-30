@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/xml"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.innomind.bestverifier">
 
     <queries>
@@ -8,8 +8,8 @@
     </queries>
 
     <application
-        android:label="Best Verifier"
         android:name="${applicationName}"
+        android:label="Best Verifier"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false">
         
