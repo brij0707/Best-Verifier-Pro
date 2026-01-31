@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-// Package & Developer Constants
+// Package & Contact Constants
 const String uidaiScannerPackage = "in.net.uidai.qrcodescanner";
-const String faceRDAppPackage = "in.gov.uidai.facerd";
+const String faceRDAppPackage = "in.gov.uidai.facerd"; // Package ID for Android detection
 const String developerEmail = "Innomind2022@gmail.com";
 
 class ToolData {
@@ -19,13 +19,13 @@ class ToolData {
   });
 }
 
-// --- TAB A: VERIFY OTHERS (16 TOOLS SERIAL BIFURCATION) ---
+// --- TAB A: VERIFY OTHERS (16 TOOLS) ---
 final Map<String, Map<String, dynamic>> gridCategories = {
   "IDENTITY": {
     "enTitle": "Identity", "hiTitle": "पहचान", "icon": Icons.person, "color": 0xFF2196F3,
     "tools": [
       ToolData(enName: "Aadhaar QR Scanner", hiName: "आधार QR स्कैनर", url: uidaiScannerPackage, isApp: true, enDesc: "Digital signature/photo check.", hiDesc: "डिजिटल हस्ताक्षर/फोटो जांच।"),
-      ToolData(enName: "Aadhaar Face RD", hiName: "आधार फेस RD", url: faceRDAppPackage, isApp: true, enDesc: "Biometric face authentication.", hiDesc: "बायोमेट्रिक चेहरा प्रमाणीकरण।"),
+      ToolData(enName: "Aadhaar Face RD", hiName: "आधार फेस RD", url: "https://play.google.com/store/apps/details?id=in.gov.uidai.facerd", isApp: true, enDesc: "Biometric face authentication.", hiDesc: "बायोमेट्रिक चेहरा प्रमाणीकरण।"),
       ToolData(enName: "Aadhaar Validity", hiName: "आधार वैधता", url: "https://myaadhaar.uidai.gov.in/check-aadhaar-validity/en", enDesc: "Check Age/Gender/State.", hiDesc: "आयु/लिंग/राज्य की जांच।"),
       ToolData(enName: "Aadhaar-PAN Link", hiName: "आधार-पैन लिंक", url: "https://eportal.incometax.gov.in/iec/foservices/#/pre-login/link-aadhaar-status", enDesc: "ID consistency check.", hiDesc: "आईडी निरंतरता जांच।"),
       ToolData(enName: "Verify PAN (OTP)", hiName: "पैन सत्यापित (OTP)", url: "https://eportal.incometax.gov.in/iec/foservices/#/pre-login/verifyYourPAN", enDesc: "Deep identity match.", hiDesc: "गहरा पहचान मिलान।"),
@@ -53,7 +53,7 @@ final Map<String, Map<String, dynamic>> gridCategories = {
     "enTitle": "Finance", "hiTitle": "वित्त", "icon": Icons.account_balance, "color": 0xFF9C27B0,
     "tools": [
       ToolData(enName: "Verify Bank A/C", hiName: "बैंक खाता सत्यापन", url: "https://pfms.nic.in/static/NewLayoutCommonContent.aspx?RequestPagename=Static/KnowYourPayment.aspx", enDesc: "Public status validator.", hiDesc: "सार्वजनिक स्थिति सत्यापन।"),
-      ToolData(enName: "ITR Status", hiName: "ITR स्थिति", url: "https://eportal.incometax.gov.in/iec/foservices/#/pre-login/itr-status", enDesc: "Tax filing verification.", hiDesc: "टैक्स फाइलिंग सत्यापन।"),
+      ToolData(enName: "ITR Login", hiName: "ITR लॉगिन", url: "https://eportal.incometax.gov.in/iec/foservices/#/login", enDesc: "Tax filing login.", hiDesc: "टैक्स फाइलिंग लॉगिन।"),
       ToolData(enName: "Credit Score", hiName: "क्रेडिट स्कोर", url: "https://consumer.experian.in/ECV-OLN/view/angular/#/", enDesc: "Experian financial health.", hiDesc: "वित्तीय स्वास्थ्य जांच।"),
     ],
   }
@@ -64,7 +64,7 @@ final List<ToolData> ownDocsTools = [
   ToolData(enName: "DigiLocker", hiName: "डिजी लॉकर", url: "https://www.digilocker.gov.in/", enDesc: "Access Govt certificates.", hiDesc: "सरकारी प्रमाणपत्र प्राप्त करें।"),
   ToolData(enName: "mParivahan", hiName: "m-परिवहन", url: "https://mparivahan.gov.in/", enDesc: "Your virtual DL/RC.", hiDesc: "आपका वर्चुअल DL/RC।"),
   ToolData(enName: "My Aadhaar", hiName: "मेरा आधार", url: "https://myaadhaar.uidai.gov.in/", enDesc: "E-Aadhaar download.", hiDesc: "ई-आधार डाउनलोड करें।"),
-  ToolData(enName: "Income Tax", hiName: "आयकर", url: "https://eportal.incometax.gov.in/", enDesc: "Check tax filings.", hiDesc: "टैक्स फाइलिंग जांचें।"),
+  ToolData(enName: "Income Tax Login", hiName: "आयकर लॉगिन", url: "https://eportal.incometax.gov.in/iec/foservices/#/login", enDesc: "Personal tax profile.", hiDesc: "व्यक्तिगत टैक्स प्रोफाइल।"),
   ToolData(enName: "EPF Portal", hiName: "EPF पोर्टल", url: "https://unifiedportal-mem.epfindia.gov.in/", enDesc: "Check PF balance.", hiDesc: "PF बैलेंस चेक करें।"),
 ];
 
@@ -79,7 +79,7 @@ final List<Map<String, String>> emergencyList = [
   {"name": "Child Helpline", "hi": "चाइल्ड हेल्पलाइन", "num": "1098"},
 ];
 
-// --- FULL DETAILED STRATEGY (5 PHASES) ---
+// --- FULL DETAILED STRATEGY ---
 final List<Map<String, String>> fullStrategy = [
   {
     "step": "1",
