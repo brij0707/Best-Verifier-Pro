@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:external_app_launcher/external_app_launcher.dart';
-// CRITICAL: Links the brain to the UI
+// Links the data logic to the UI
 import 'links_data.dart'; 
 
 void main() => runApp(const BestVerifierApp());
@@ -38,14 +38,14 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     _tabController = TabController(length: 2, vsync: this);
   }
 
-  // FIXED: Email Feedback with URI encoding
+  // FIXED EMAIL LOGIC: Properly encoded for mobile apps
   Future<void> _sendEmail() async {
     final String subject = Uri.encodeComponent("Feedback from App side");
     final String body = Uri.encodeComponent("Sent from Best Verifier App side\n\n[Your Message]");
     final Uri emailUri = Uri.parse("mailto:$developerEmail?subject=$subject&body=$body");
     
     if (await canLaunchUrl(emailUri)) {
-      await launchUrl(emailUri);
+      await launchUrl(emailUri, mode: LaunchMode.externalApplication);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(isHindi ? "ईमेल ऐप नहीं मिला" : "No email app found")),
@@ -102,9 +102,13 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
         actions: [
           IconButton(icon: const Icon(Icons.email_outlined, color: Colors.white), onPressed: _sendEmail),
           IconButton(icon: const Icon(Icons.info_outline, color: Colors.white), onPressed: _showStrategyGuide),
+          // UPDATED: A/अ Toggle button
           TextButton(
             onPressed: () => setState(() => isHindi = !isHindi),
-            child: Text(isHindi ? "A/English" : "अ/हिंदी", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+            child: Text(
+              isHindi ? "A/English" : "अ/हिंदी", 
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+            ),
           ),
         ],
         bottom: TabBar(
