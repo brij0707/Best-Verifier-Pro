@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # Finalized dependencies for the project
+  # Core dependencies for the project
   external_app_launcher: ^4.0.3
   url_launcher: ^6.2.5
   cupertino_icons: ^1.0.6
@@ -20,15 +20,16 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
-  
-  # ADD THIS LINE TO FIX EXIT CODE 255
   flutter_launcher_icons: ^0.13.1
 
-# This section is also required by the icon generator tool
+# CORRECTED ICON PATH HERE
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icon/icon.png" # Make sure an image exists here or point to a valid one
+  image_path: "assets/icon/logo.png" # Updated from icon.png to logo.png
 
 flutter:
   uses-material-design: true
+  # Ensure your assets are registered so the app can find the logo
+  assets:
+    - assets/icon/logo.png
