@@ -34,18 +34,18 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     _tabController = TabController(length: 2, vsync: this);
   }
 
-  // Email Intent with pre-written context
+  // FIXED: Email Feedback Logic with proper URI encoding
   Future<void> _sendEmail() async {
-    final Uri emailUri = Uri(
-      scheme: 'mailto',
-      path: developerEmail,
-      queryParameters: {
-        'subject': 'Feedback from App side',
-        'body': 'Sent from Best Verifier App side\n\n[Write your message here]'
-      },
-    );
+    final String subject = Uri.encodeComponent("Feedback from App side");
+    final String body = Uri.encodeComponent("Sent from Best Verifier App side\n\n[Your Message]");
+    final Uri emailUri = Uri.parse("mailto:$developerEmail?subject=$subject&body=$body");
+    
     if (await canLaunchUrl(emailUri)) {
       await launchUrl(emailUri);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(isHindi ? "ईमेल ऐप नहीं मिला" : "No email app found")),
+      );
     }
   }
 
@@ -94,9 +94,9 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
         actions: [
           IconButton(icon: const Icon(Icons.email_outlined, color: Colors.white), onPressed: _sendEmail),
           IconButton(icon: const Icon(Icons.info_outline, color: Colors.white), onPressed: _showStrategyGuide),
-          IconButton(
-            icon: const Icon(Icons.translate, color: Colors.white),
+          TextButton(
             onPressed: () => setState(() => isHindi = !isHindi),
+            child: Text(isHindi ? "A/English" : "अ/हिंदी", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
           ),
         ],
         bottom: TabBar(
@@ -124,16 +124,7 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     return SingleChildScrollView(
       child: Column(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            color: Colors.amber.shade50,
-            child: Text(
-              isHindi ? "डिस्क्लेमर: हम एक निजी निर्देशिका हैं और किसी भी सरकारी संस्था से संबद्ध नहीं हैं।" 
-              : "Disclaimer: We are a private directory and not affiliated with any Government entity.",
-              textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.brown),
-            ),
-          ),
+          _buildDisclaimer(),
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -159,7 +150,8 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
               ],
             )).toList(),
           ),
-          _buildFooterButtons(),
+          _buildEmergencyButton(),
+          _buildPrivacyFooter(),
         ],
       ),
     );
@@ -169,51 +161,79 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     return SingleChildScrollView(
       child: Column(
         children: [
-          const SizedBox(height: 30),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: ownDocsTools.map((tool) => Card(
-                elevation: 0,
-                color: Colors.grey.shade100,
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: const CircleAvatar(backgroundColor: Colors.blueGrey, child: Icon(Icons.folder, color: Colors.white, size: 20)),
-                  title: Text(isHindi ? tool.hiName : tool.enName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(isHindi ? tool.hiDesc : tool.enDesc),
-                  trailing: const Icon(Icons.open_in_new, size: 18),
-                  onTap: () => _handleAction(tool),
-                ),
-              )).toList(),
+          const SizedBox(height: 20),
+          ...ownDocsTools.map((tool) => Card(
+            elevation: 0, color: Colors.grey.shade100, margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: ListTile(
+              leading: const CircleAvatar(backgroundColor: Colors.blueGrey, child: Icon(Icons.folder, color: Colors.white, size: 20)),
+              title: Text(isHindi ? tool.hiName : tool.enName, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(isHindi ? tool.hiDesc : tool.enDesc),
+              onTap: () => _handleAction(tool),
             ),
-          ),
-          _buildFooterButtons(),
+          )).toList(),
+          _buildEmergencyButton(),
+          _buildPrivacyFooter(),
         ],
       ),
     );
   }
 
-  Widget _buildFooterButtons() {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          child: ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 55)),
-            onPressed: _showEmergencyHub,
-            icon: const Icon(Icons.emergency),
-            label: Text(isHindi ? "आपातकालीन डायल" : "EMERGENCY DIALER"),
-          ),
+  Widget _buildDisclaimer() {
+    return Container(
+      width: double.infinity, padding: const EdgeInsets.all(12), color: Colors.amber.shade50,
+      child: Text(
+        isHindi ? "डिस्क्लेमर: हम एक निजी निर्देशिका हैं और किसी भी सरकारी संस्था से संबद्ध नहीं हैं।" 
+        : "Disclaimer: We are a private directory and not affiliated with any Government entity.",
+        textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.brown),
+      ),
+    );
+  }
+
+  Widget _buildEmergencyButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 55)),
+        onPressed: _showEmergencyHub,
+        icon: const Icon(Icons.emergency),
+        label: Text(isHindi ? "आपातकालीन डायल" : "EMERGENCY DIALER"),
+      ),
+    );
+  }
+
+  Widget _buildPrivacyFooter() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Text(
+        isHindi ? "गोपनीयता सूचना: हम आपके द्वारा सत्यापित किसी भी व्यक्तिगत डेटा को स्टोर नहीं करते हैं।"
+        : "Privacy Notice: We do not store, save, or share any personal data or documents you verify.",
+        textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, color: Colors.grey),
+      ),
+    );
+  }
+
+  // FIXED: Emergency Hub with complete 7-number list
+  void _showEmergencyHub() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(isHindi ? "आपातकालीन नंबर" : "Emergency Numbers", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red)),
+            const Divider(),
+            ...emergencyList.map((e) => ListTile(
+              leading: const Icon(Icons.phone_forwarded, color: Colors.red),
+              title: Text(isHindi ? e['hi']! : e['name']!),
+              trailing: Text(e['num']!, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+              onTap: () => launchUrl(Uri.parse("tel:${e['num']}")),
+            )).toList(),
+          ],
         ),
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text(
-            isHindi ? "गोपनीयता सूचना: हम आपके द्वारा सत्यापित किसी भी व्यक्तिगत डेटा को स्टोर या साझा नहीं करते हैं।"
-            : "Privacy Notice: We do not store, save, or share any personal data or documents you verify.",
-            textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, color: Colors.grey),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -223,18 +243,15 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
       builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.65,
-        expand: false,
+        initialChildSize: 0.65, expand: false,
         builder: (context, scrollController) => ListView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(25),
+          controller: scrollController, padding: const EdgeInsets.all(25),
           children: [
             Text(isHindi ? cat['hiTitle'] : cat['enTitle'], style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF0D47A1))),
             const Divider(height: 30),
             ...cat['tools'].map<Widget>((ToolData t) => ListTile(
-              contentPadding: const EdgeInsets.symmetric(vertical: 8),
               leading: Icon(cat['icon'], color: Color(cat['color'])),
-              title: Text(isHindi ? t.hiName : t.enName, style: const TextStyle(fontWeight: FontWeight.w600)),
+              title: Text(isHindi ? t.hiName : t.enName, style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(isHindi ? t.hiDesc : t.enDesc),
               onTap: () => _handleAction(t),
             )).toList(),
@@ -248,7 +265,7 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     if (Platform.isIOS && tool.isApp) {
       showDialog(context: context, builder: (c) => AlertDialog(
         title: const Text("iOS Notice"),
-        content: const Text("This biometric feature is currently optimized for Android due to UIDAI restrictions. It is coming soon to iOS."),
+        content: const Text("This biometric feature is currently optimized for Android. Coming soon to iOS."),
         actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text("OK"))],
       ));
       return;
@@ -256,7 +273,7 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     if (tool.isApp) {
       bool? go = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
         title: Text(isHindi ? "ऐप आवश्यक" : "App Required"),
-        content: Text(isHindi ? "आधिकारिक ${tool.enName} ऐप की आवश्यकता है। क्या आप स्टोर पर जाना चाहते हैं?" : "The official ${tool.enName} app is required. Proceed to Store?"),
+        content: Text(isHindi ? "${tool.enName} ऐप की आवश्यकता है। क्या आप स्टोर पर जाना चाहते हैं?" : "The official ${tool.enName} app is required. Proceed to Store?"),
         actions: [
           TextButton(onPressed: () => Navigator.pop(c, false), child: Text(isHindi ? "नहीं" : "No")),
           TextButton(onPressed: () => Navigator.pop(c, true), child: Text(isHindi ? "हाँ" : "Yes")),
@@ -266,22 +283,5 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     } else {
       await launchUrl(Uri.parse(tool.url), mode: LaunchMode.externalApplication);
     }
-  }
-
-  void _showEmergencyHub() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(leading: const Icon(Icons.local_police, color: Colors.red), title: const Text("Police (100)"), onTap: () => launchUrl(Uri.parse("tel:100"))),
-            ListTile(leading: const Icon(Icons.security, color: Colors.red), title: const Text("Cyber Fraud (1930)"), onTap: () => launchUrl(Uri.parse("tel:1930"))),
-            ListTile(leading: const Icon(Icons.emergency, color: Colors.red), title: const Text("National Emergency (112)"), onTap: () => launchUrl(Uri.parse("tel:112"))),
-          ],
-        ),
-      ),
-    );
   }
 }
