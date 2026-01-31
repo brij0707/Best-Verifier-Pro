@@ -11,13 +11,11 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # For opening Web links, Email, and Phone calls
+  # Updated to the latest stable version suggested by your build logs
+  external_app_launcher: ^4.0.3
+
+  # Other verified dependencies
   url_launcher: ^6.2.5
-
-  # For launching official Aadhaar QR and Face RD apps
-  external_app_launcher: ^3.2.0
-
-  # For creating the visual grid and icons
   cupertino_icons: ^1.0.6
 
 dev_dependencies:
@@ -27,10 +25,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-  # If you plan to add custom Hindi fonts later, they would go here.
-  # fonts:
-  #   - family: NotoSansDevanagari
-  #     fonts:
-  #       - asset: assets/fonts/NotoSansDevanagari-Regular.ttf
-
