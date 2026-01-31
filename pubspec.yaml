@@ -1,6 +1,7 @@
 name: best_verifier
 description: "A comprehensive private directory for identity and asset verification."
-publish_to: 'none'
+# The following line prevents the package from being accidentally published to pub.dev.
+publish_to: 'none' 
 
 version: 1.0.0+1
 
@@ -11,25 +12,35 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # Core dependencies for the project
-  external_app_launcher: ^4.0.3
+  # For opening web portals, dialing emergency numbers, and sending feedback emails
   url_launcher: ^6.2.5
+
+  # For launching UIDAI native apps (Aadhaar QR & Face RD)
+  external_app_launcher: ^4.0.3
+
+  # Standard icons for the UI
   cupertino_icons: ^1.0.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  # Recommended lint rules for a clean codebase
   flutter_lints: ^3.0.0
+
+  # For generating the launcher icon from assets/logo.png
   flutter_launcher_icons: ^0.13.1
 
-# CORRECTED ICON PATH HERE
+# ICON GENERATOR CONFIGURATION
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/logo.png" # Updated from icon.png to logo.png
+  image_path: "assets/logo.png"
 
 flutter:
   uses-material-design: true
-  # Ensure your assets are registered so the app can find the logo
+
+  # ASSET REGISTRATION
+  # Ensure your logo is placed in the 'assets' folder at the root level
   assets:
     - assets/logo.png
