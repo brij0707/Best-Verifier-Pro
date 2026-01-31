@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:external_app_launcher/external_app_launcher.dart';
-import 'links_data.dart';
+// CRITICAL: Links the brain to the UI
+import 'links_data.dart'; 
 
 void main() => runApp(const BestVerifierApp());
 
@@ -12,7 +13,10 @@ class BestVerifierApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: const Color(0xFF0D47A1)),
+      theme: ThemeData(
+        useMaterial3: true, 
+        colorSchemeSeed: const Color(0xFF0D47A1),
+      ),
       home: const MainTabScreen(),
     );
   }
@@ -34,7 +38,7 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     _tabController = TabController(length: 2, vsync: this);
   }
 
-  // FIXED: Email Feedback Logic with proper URI encoding
+  // FIXED: Email Feedback with URI encoding
   Future<void> _sendEmail() async {
     final String subject = Uri.encodeComponent("Feedback from App side");
     final String body = Uri.encodeComponent("Sent from Best Verifier App side\n\n[Your Message]");
@@ -66,7 +70,11 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(radius: 14, backgroundColor: const Color(0xFF0D47A1), child: Text(fullStrategy[i]['step']!, style: const TextStyle(color: Colors.white, fontSize: 12))),
+                      CircleAvatar(
+                        radius: 14, 
+                        backgroundColor: const Color(0xFF0D47A1), 
+                        child: Text(fullStrategy[i]['step']!, style: const TextStyle(color: Colors.white, fontSize: 12))
+                      ),
                       const SizedBox(width: 10),
                       Expanded(child: Text(isHindi ? fullStrategy[i]['title_hi']! : fullStrategy[i]['title_en']!, style: const TextStyle(fontWeight: FontWeight.bold))),
                     ],
@@ -212,7 +220,6 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     );
   }
 
-  // FIXED: Emergency Hub with complete 7-number list
   void _showEmergencyHub() {
     showModalBottomSheet(
       context: context,
