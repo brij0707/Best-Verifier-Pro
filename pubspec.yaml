@@ -1,35 +1,35 @@
 name: best_verifier
-description: Best Verifier - Official Verification Hub.
+description: "A comprehensive private directory for identity and asset verification."
 publish_to: 'none'
+
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.2.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  # The Bridge: Detects and launches official Gov apps
-  external_app_launcher: ^4.0.3 
-  # Browser: Opens standard web URLs (Incometax, Parivahan)
-  url_launcher: ^6.3.0
-  # Style: Professional fonts for the UI
-  google_fonts: ^6.1.0
+
+  # For opening Web links, Email, and Phone calls
+  url_launcher: ^6.2.5
+
+  # For launching official Aadhaar QR and Face RD apps
+  external_app_launcher: ^3.2.0
+
+  # For creating the visual grid and icons
   cupertino_icons: ^1.0.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  # The Logo Generator
-  flutter_launcher_icons: ^0.13.1 
-
-# Logo Configuration - This will turn your logo.png into an App Icon
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "assets/logo.png"
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
-  assets:
-    - assets/logo.png
+
+  # If you plan to add custom Hindi fonts later, they would go here.
+  # fonts:
+  #   - family: NotoSansDevanagari
+  #     fonts:
+  #       - asset: assets/fonts/NotoSansDevanagari-Regular.ttf
