@@ -32,4 +32,4 @@ flutter:
   uses-material-design: true
   # Ensure your assets are registered so the app can find the logo
   assets:
-    - assets/icon/logo.png
+    - assets/logo.png
