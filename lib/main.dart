@@ -1,23 +1,18 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:external_app_launcher/external_app_launcher.dart';
 import 'links_data.dart';
 
-void main() {
-  runApp(const BestVerifierApp());
-}
+void main() => runApp(const BestVerifierApp());
 
 class BestVerifierApp extends StatelessWidget {
   const BestVerifierApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF0D47A1),
-      ),
+      theme: ThemeData(useMaterial3: true, colorSchemeSeed: const Color(0xFF0D47A1)),
       home: const MainTabScreen(),
     );
   }
@@ -25,251 +20,254 @@ class BestVerifierApp extends StatelessWidget {
 
 class MainTabScreen extends StatefulWidget {
   const MainTabScreen({super.key});
-
   @override
   State<MainTabScreen> createState() => _MainTabScreenState();
 }
 
-class _MainTabScreenState extends State<MainTabScreen> {
-  int _selectedIndex = 0;
+class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   bool isHindi = false;
 
-  // Toggle Language
-  void _toggleLanguage() {
-    setState(() {
-      isHindi = !isHindi;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  // Pre-written Email Logic
+  Future<void> _sendEmail() async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: developerEmail,
+      queryParameters: {
+        'subject': 'Feedback from App side',
+        'body': 'Sent from Best Verifier App side\n\n[Write your message here]'
+      },
+    );
+    if (await canLaunchUrl(emailUri)) {
+      await launchUrl(emailUri);
+    }
+  }
+
+  void _showStrategyGuide() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isHindi ? "विस्तृत जांच रणनीति" : "Detailed Investigation Strategy"),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: fullStrategy.length,
+            itemBuilder: (context, i) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(radius: 12, child: Text(fullStrategy[i]['step']!)),
+                      const SizedBox(width: 10),
+                      Text(isHindi ? fullStrategy[i]['title_hi']! : fullStrategy[i]['title_en']!,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 34, top: 5),
+                    child: Text(isHindi ? fullStrategy[i]['hi']! : fullStrategy[i]['en']!,
+                        style: const TextStyle(fontSize: 13, color: Colors.black87)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(isHindi ? "समझ गया" : "Got it"))],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          isHindi ? "बेस्ट वेरिफायर" : "Best Verifier",
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        title: const Text("Best Verifier", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: const Color(0xFF0D47A1),
         actions: [
-          // The A/अ Language Toggle
-          TextButton.icon(
-            onPressed: _toggleLanguage,
-            icon: const Icon(Icons.translate, color: Colors.white, size: 18),
-            label: Text(
-              isHindi ? "English" : "हिंदी",
-              style: const TextStyle(color: Colors.white),
-            ),
+          IconButton(icon: const Icon(Icons.email_outlined, color: Colors.white), onPressed: _sendEmail),
+          IconButton(
+            icon: const Icon(Icons.translate, color: Colors.white),
+            onPressed: () => setState(() => isHindi = !isHindi),
           ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorColor: Colors.white,
+          tabs: [
+            Tab(text: isHindi ? "सत्यापन" : "Verify Others"),
+            Tab(text: isHindi ? "दस्तावेज़" : "Own Docs"),
+          ],
+        ),
       ),
-      // Switching between Tab 1 (Investigation) and Tab 2 (My Docs)
-      body: _selectedIndex == 0 
-          ? InvestigationTab(isHindi: isHindi) 
-          : MyDocumentsTab(isHindi: isHindi),
-      
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        selectedItemColor: const Color(0xFF0D47A1),
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.verified_user),
-            label: isHindi ? "सत्यापन" : "Verify Others",
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildVerifyTab(),
+          _buildOwnDocsTab(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerifyTab() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // Disclaimer Line
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            color: Colors.amber.shade100,
+            child: Text(
+              isHindi ? "डिस्क्लेमर: हम एक निजी निर्देशिका हैं और किसी भी सरकारी संस्था से संबद्ध नहीं हैं।" 
+              : "Disclaimer: We are a private directory and not affiliated with any Government entity.",
+              textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.folder_shared),
-            label: isHindi ? "मेरे दस्तावेज़" : "My Documents",
+          
+          // 4 Grid Categories
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            padding: const EdgeInsets.all(20),
+            mainAxisSpacing: 20,
+            children: gridCategories.entries.map((e) => Column(
+              children: [
+                InkWell(
+                  onTap: () => _showToolModal(e.value),
+                  child: Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: Color(e.value['color']).withOpacity(0.12),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Color(e.value['color']).withOpacity(0.4), width: 2),
+                    ),
+                    child: Icon(e.value['icon'], color: Color(e.value['color']), size: 38),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(isHindi ? e.value['hiTitle'] : e.value['enTitle'], style: const TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            )).toList(),
+          ),
+
+          // Strategy & Emergency Section
+          ListTile(
+            onTap: _showStrategyGuide,
+            leading: const Icon(Icons.info_outline, color: Colors.blue),
+            title: Text(isHindi ? "जांच रणनीति (स्टेप-बाय-स्टेप)" : "Investigation Strategy (Step-by-Step)"),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+          ),
+          
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 52)),
+              onPressed: _showEmergencyHub,
+              icon: const Icon(Icons.emergency),
+              label: Text(isHindi ? "आपातकालीन डायल" : "EMERGENCY DIALER"),
+            ),
+          ),
+
+          // Privacy Footer
+          Padding(
+            padding: const EdgeInsets.all(15),
+            child: Text(
+              isHindi ? "गोपनीयता सूचना: हम आपके द्वारा सत्यापित किसी भी व्यक्तिगत डेटा या दस्तावेज़ को स्टोर, सेव या साझा नहीं करते हैं।"
+              : "Privacy Notice: We do not store, save, or share any personal data or documents you verify.",
+              textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, color: Colors.grey),
+            ),
           ),
         ],
       ),
     );
   }
-}
 
-class InvestigationTab extends StatelessWidget {
-  final bool isHindi;
-  const InvestigationTab({super.key, required this.isHindi});
-
-  // Launch Logic for Apps and Full Web URLs
-  Future<void> _handleLaunch(ToolData tool) async {
-    if (tool.isApp) {
-      await LaunchApp.openApp(
-        androidPackageName: tool.url,
-        openStore: true,
-      );
-    } else {
-      final Uri uri = Uri.parse(tool.url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
-    }
-  }
-
-  // Tool List Modal (Triggered by Grid Clicks)
-  void _showToolList(BuildContext context, Map<String, dynamic> category) {
+  void _showToolModal(Map<String, dynamic> cat) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
       builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
+        initialChildSize: 0.6,
         expand: false,
-        builder: (context, scrollController) => Column(
+        builder: (context, scrollController) => ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(20),
           children: [
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(
-                isHindi ? category['hiTitle'] : category['enTitle'],
-                style: TextStyle(
-                  fontSize: 22, 
-                  fontWeight: FontWeight.bold, 
-                  color: Color(category['color'])
-                ),
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                controller: scrollController,
-                itemCount: category['tools'].length,
-                itemBuilder: (context, index) {
-                  ToolData tool = category['tools'][index];
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Color(category['color']).withOpacity(0.1),
-                      child: Icon(category['icon'], color: Color(category['color'])),
-                    ),
-                    title: Text(isHindi ? tool.hiName : tool.enName),
-                    subtitle: Text(isHindi ? tool.hiDesc : tool.enDesc),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-                    onTap: () => _handleLaunch(tool),
-                  );
-                },
-              ),
-            ),
+            Text(isHindi ? cat['hiTitle'] : cat['enTitle'], style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const Divider(),
+            ...cat['tools'].map<Widget>((ToolData t) => ListTile(
+              leading: Icon(cat['icon'], color: Color(cat['color'])),
+              title: Text(isHindi ? t.hiName : t.enName),
+              subtitle: Text(isHindi ? t.hiDesc : t.enDesc),
+              onTap: () => _handleAction(t),
+            )).toList(),
           ],
         ),
       ),
     );
   }
 
-  // Detailed 6.1 Logic Guide
-  void _showHowToVerify(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(isHindi ? "सत्यापन कैसे करें (रणनीति)" : "How to Verify (Strategy)"),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _guideStep("1", isHindi ? "आधार वैधता: जनसांख्यिकीय विवरण (आयु/लिंग/राज्य) की पुष्टि करें।" : "Aadhaar Validity: Confirm demographic details (Age/Gender/State)."),
-              _guideStep("2", isHindi ? "आधार-पैन लिंक: सरकारी रिकॉर्ड में निरंतरता की जांच करें।" : "Aadhaar-PAN Link: Check consistency across government records."),
-              _guideStep("3", isHindi ? "लाइवनेस (QR/Face): व्यक्ति का आईडी से भौतिक मिलान करें।" : "Liveness (QR/Face): Physically match the person with the ID."),
-              _guideStep("4", isHindi ? "संपत्ति और NOC: चोरी के रिकॉर्ड या पुलिस मामलों की जांच करें।" : "Assets & NOC: Check for stolen records or police cases."),
-              _guideStep("5", isHindi ? "अनुपालन: लंबित चालानों की जांच करें।" : "Compliance: Check for pending challans."),
-            ],
-          ),
+  void _handleAction(ToolData tool) async {
+    // iOS Compatibility Check
+    if (Platform.isIOS && tool.isApp) {
+      showDialog(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text("Coming Soon to iOS"),
+          content: const Text("This biometric feature is currently optimized for Android due to UIDAI restrictions. It is coming soon to iOS."),
+          actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text("OK"))],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(isHindi ? "बंद करें" : "Close"))
-        ],
-      ),
-    );
+      );
+      return;
+    }
+
+    // Android App Pre-Redirect Notice
+    if (tool.isApp) {
+      bool? go = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: Text(isHindi ? "ऐप की आवश्यकता" : "App Required"),
+          content: Text(isHindi ? "इस फीचर के लिए आधिकारिक ${tool.enName} ऐप की आवश्यकता है। क्या आप स्टोर पर जाना चाहते हैं?" : "This feature requires the official ${tool.enName} app. Proceed to Store?"),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(isHindi ? "नहीं" : "No")),
+            TextButton(onPressed: () => Navigator.pop(c, true), child: Text(isHindi ? "हाँ" : "Yes")),
+          ],
+        ),
+      );
+      if (go == true) await LaunchApp.openApp(androidPackageName: tool.url, openStore: true);
+    } else {
+      await launchUrl(Uri.parse(tool.url), mode: LaunchMode.externalApplication);
+    }
   }
 
-  Widget _guideStep(String num, String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  void _showEmergencyHub() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          CircleAvatar(radius: 12, child: Text(num, style: const TextStyle(fontSize: 12))),
-          const SizedBox(width: 10),
-          Expanded(child: Text(text)),
+          ListTile(leading: const Icon(Icons.local_police, color: Colors.red), title: const Text("Police (100)"), onTap: () => launchUrl(Uri.parse("tel:100"))),
+          ListTile(leading: const Icon(Icons.security, color: Colors.red), title: const Text("Cyber Fraud (1930)"), onTap: () => launchUrl(Uri.parse("tel:1930"))),
+          ListTile(leading: const Icon(Icons.emergency, color: Colors.red), title: const Text("National Emergency (112)"), onTap: () => launchUrl(Uri.parse("tel:112"))),
         ],
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // The 4-Category Grid (Restored V1 Colors)
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            padding: const EdgeInsets.all(16),
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            children: gridCategories.entries.map((e) {
-              final cat = e.value;
-              return Card(
-                elevation: 4,
-                color: Color(cat['color']),
-                child: InkWell(
-                  onTap: () => _showToolList(context, cat),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(cat['icon'], color: Colors.white, size: 45),
-                      const SizedBox(height: 10),
-                      Text(
-                        isHindi ? cat['hiTitle'] : cat['enTitle'],
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          
-          const Divider(),
-
-          // The Meta-Strategy Button
-          ListTile(
-            leading: const Icon(Icons.psychology_outlined, color: Colors.blueAccent),
-            title: Text(isHindi ? "6.1 सत्यापन कैसे करें" : "6.1 How to Verify"),
-            subtitle: Text(isHindi ? "विस्तृत जांच रणनीति देखें" : "View Detailed Investigation Strategy"),
-            trailing: const Icon(Icons.info_outline),
-            onTap: () => _showHowToVerify(context),
-          ),
-
-          const SizedBox(height: 20),
-          Text(
-            isHindi ? "अस्वीकरण: हम सरकार से संबद्ध नहीं हैं।" : "Disclaimer: We are not affiliated with the Govt.",
-            style: const TextStyle(fontSize: 10, color: Colors.grey),
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-}
-
-class MyDocumentsTab extends StatelessWidget {
-  final bool isHindi;
-  const MyDocumentsTab({super.key, required this.isHindi});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.folder_open, size: 80, color: Colors.grey),
-          const SizedBox(height: 20),
-          Text(
-            isHindi ? "मेरे दस्तावेज़ अनुभाग जल्द ही आ रहा है" : "My Documents Section Coming Soon",
-            style: const TextStyle(color: Colors.grey),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildOwnDocsTab() => const Center(child: Text("Own Docs Portals - Coming Soon"));
 }
