@@ -34,7 +34,7 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     _tabController = TabController(length: 2, vsync: this);
   }
 
-  // Pre-written Email Logic
+  // Email Intent with pre-written context
   Future<void> _sendEmail() async {
     final Uri emailUri = Uri(
       scheme: 'mailto',
@@ -60,29 +60,27 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
             shrinkWrap: true,
             itemCount: fullStrategy.length,
             itemBuilder: (context, i) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(radius: 12, child: Text(fullStrategy[i]['step']!)),
+                      CircleAvatar(radius: 14, backgroundColor: const Color(0xFF0D47A1), child: Text(fullStrategy[i]['step']!, style: const TextStyle(color: Colors.white, fontSize: 12))),
                       const SizedBox(width: 10),
-                      Text(isHindi ? fullStrategy[i]['title_hi']! : fullStrategy[i]['title_en']!,
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Expanded(child: Text(isHindi ? fullStrategy[i]['title_hi']! : fullStrategy[i]['title_en']!, style: const TextStyle(fontWeight: FontWeight.bold))),
                     ],
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(left: 34, top: 5),
-                    child: Text(isHindi ? fullStrategy[i]['hi']! : fullStrategy[i]['en']!,
-                        style: const TextStyle(fontSize: 13, color: Colors.black87)),
+                    padding: const EdgeInsets.only(left: 38, top: 6),
+                    child: Text(isHindi ? fullStrategy[i]['hi']! : fullStrategy[i]['en']!, style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.4)),
                   ),
                 ],
               ),
             ),
           ),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(isHindi ? "समझ गया" : "Got it"))],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(isHindi ? "ठीक है" : "Got it"))],
       ),
     );
   }
@@ -95,6 +93,7 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
         backgroundColor: const Color(0xFF0D47A1),
         actions: [
           IconButton(icon: const Icon(Icons.email_outlined, color: Colors.white), onPressed: _sendEmail),
+          IconButton(icon: const Icon(Icons.info_outline, color: Colors.white), onPressed: _showStrategyGuide),
           IconButton(
             icon: const Icon(Icons.translate, color: Colors.white),
             onPressed: () => setState(() => isHindi = !isHindi),
@@ -125,25 +124,22 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     return SingleChildScrollView(
       child: Column(
         children: [
-          // Disclaimer Line
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(10),
-            color: Colors.amber.shade100,
+            padding: const EdgeInsets.all(12),
+            color: Colors.amber.shade50,
             child: Text(
               isHindi ? "डिस्क्लेमर: हम एक निजी निर्देशिका हैं और किसी भी सरकारी संस्था से संबद्ध नहीं हैं।" 
               : "Disclaimer: We are a private directory and not affiliated with any Government entity.",
-              textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.brown),
             ),
           ),
-          
-          // 4 Grid Categories
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: 2,
             padding: const EdgeInsets.all(20),
-            mainAxisSpacing: 20,
+            mainAxisSpacing: 25,
             children: gridCategories.entries.map((e) => Column(
               children: [
                 InkWell(
@@ -151,11 +147,11 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
                   child: Container(
                     padding: const EdgeInsets.all(22),
                     decoration: BoxDecoration(
-                      color: Color(e.value['color']).withOpacity(0.12),
+                      color: Color(e.value['color']).withOpacity(0.1),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Color(e.value['color']).withOpacity(0.4), width: 2),
+                      border: Border.all(color: Color(e.value['color']).withOpacity(0.5), width: 2),
                     ),
-                    child: Icon(e.value['icon'], color: Color(e.value['color']), size: 38),
+                    child: Icon(e.value['icon'], color: Color(e.value['color']), size: 40),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -163,36 +159,61 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
               ],
             )).toList(),
           ),
-
-          // Strategy & Emergency Section
-          ListTile(
-            onTap: _showStrategyGuide,
-            leading: const Icon(Icons.info_outline, color: Colors.blue),
-            title: Text(isHindi ? "जांच रणनीति (स्टेप-बाय-स्टेप)" : "Investigation Strategy (Step-by-Step)"),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-          ),
-          
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 52)),
-              onPressed: _showEmergencyHub,
-              icon: const Icon(Icons.emergency),
-              label: Text(isHindi ? "आपातकालीन डायल" : "EMERGENCY DIALER"),
-            ),
-          ),
-
-          // Privacy Footer
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Text(
-              isHindi ? "गोपनीयता सूचना: हम आपके द्वारा सत्यापित किसी भी व्यक्तिगत डेटा या दस्तावेज़ को स्टोर, सेव या साझा नहीं करते हैं।"
-              : "Privacy Notice: We do not store, save, or share any personal data or documents you verify.",
-              textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, color: Colors.grey),
-            ),
-          ),
+          _buildFooterButtons(),
         ],
       ),
+    );
+  }
+
+  Widget _buildOwnDocsTab() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(height: 30),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: ownDocsTools.map((tool) => Card(
+                elevation: 0,
+                color: Colors.grey.shade100,
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  leading: const CircleAvatar(backgroundColor: Colors.blueGrey, child: Icon(Icons.folder, color: Colors.white, size: 20)),
+                  title: Text(isHindi ? tool.hiName : tool.enName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(isHindi ? tool.hiDesc : tool.enDesc),
+                  trailing: const Icon(Icons.open_in_new, size: 18),
+                  onTap: () => _handleAction(tool),
+                ),
+              )).toList(),
+            ),
+          ),
+          _buildFooterButtons(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooterButtons() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 55)),
+            onPressed: _showEmergencyHub,
+            icon: const Icon(Icons.emergency),
+            label: Text(isHindi ? "आपातकालीन डायल" : "EMERGENCY DIALER"),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text(
+            isHindi ? "गोपनीयता सूचना: हम आपके द्वारा सत्यापित किसी भी व्यक्तिगत डेटा को स्टोर या साझा नहीं करते हैं।"
+            : "Privacy Notice: We do not store, save, or share any personal data or documents you verify.",
+            textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, color: Colors.grey),
+          ),
+        ),
+      ],
     );
   }
 
@@ -200,19 +221,20 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
       builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
+        initialChildSize: 0.65,
         expand: false,
         builder: (context, scrollController) => ListView(
           controller: scrollController,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(25),
           children: [
-            Text(isHindi ? cat['hiTitle'] : cat['enTitle'], style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const Divider(),
+            Text(isHindi ? cat['hiTitle'] : cat['enTitle'], style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF0D47A1))),
+            const Divider(height: 30),
             ...cat['tools'].map<Widget>((ToolData t) => ListTile(
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
               leading: Icon(cat['icon'], color: Color(cat['color'])),
-              title: Text(isHindi ? t.hiName : t.enName),
+              title: Text(isHindi ? t.hiName : t.enName, style: const TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Text(isHindi ? t.hiDesc : t.enDesc),
               onTap: () => _handleAction(t),
             )).toList(),
@@ -223,32 +245,23 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
   }
 
   void _handleAction(ToolData tool) async {
-    // iOS Compatibility Check
     if (Platform.isIOS && tool.isApp) {
-      showDialog(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: const Text("Coming Soon to iOS"),
-          content: const Text("This biometric feature is currently optimized for Android due to UIDAI restrictions. It is coming soon to iOS."),
-          actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text("OK"))],
-        ),
-      );
+      showDialog(context: context, builder: (c) => AlertDialog(
+        title: const Text("iOS Notice"),
+        content: const Text("This biometric feature is currently optimized for Android due to UIDAI restrictions. It is coming soon to iOS."),
+        actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text("OK"))],
+      ));
       return;
     }
-
-    // Android App Pre-Redirect Notice
     if (tool.isApp) {
-      bool? go = await showDialog<bool>(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: Text(isHindi ? "ऐप की आवश्यकता" : "App Required"),
-          content: Text(isHindi ? "इस फीचर के लिए आधिकारिक ${tool.enName} ऐप की आवश्यकता है। क्या आप स्टोर पर जाना चाहते हैं?" : "This feature requires the official ${tool.enName} app. Proceed to Store?"),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(isHindi ? "नहीं" : "No")),
-            TextButton(onPressed: () => Navigator.pop(c, true), child: Text(isHindi ? "हाँ" : "Yes")),
-          ],
-        ),
-      );
+      bool? go = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
+        title: Text(isHindi ? "ऐप आवश्यक" : "App Required"),
+        content: Text(isHindi ? "आधिकारिक ${tool.enName} ऐप की आवश्यकता है। क्या आप स्टोर पर जाना चाहते हैं?" : "The official ${tool.enName} app is required. Proceed to Store?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(isHindi ? "नहीं" : "No")),
+          TextButton(onPressed: () => Navigator.pop(c, true), child: Text(isHindi ? "हाँ" : "Yes")),
+        ],
+      ));
       if (go == true) await LaunchApp.openApp(androidPackageName: tool.url, openStore: true);
     } else {
       await launchUrl(Uri.parse(tool.url), mode: LaunchMode.externalApplication);
@@ -258,16 +271,17 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
   void _showEmergencyHub() {
     showModalBottomSheet(
       context: context,
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(leading: const Icon(Icons.local_police, color: Colors.red), title: const Text("Police (100)"), onTap: () => launchUrl(Uri.parse("tel:100"))),
-          ListTile(leading: const Icon(Icons.security, color: Colors.red), title: const Text("Cyber Fraud (1930)"), onTap: () => launchUrl(Uri.parse("tel:1930"))),
-          ListTile(leading: const Icon(Icons.emergency, color: Colors.red), title: const Text("National Emergency (112)"), onTap: () => launchUrl(Uri.parse("tel:112"))),
-        ],
+      builder: (context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(leading: const Icon(Icons.local_police, color: Colors.red), title: const Text("Police (100)"), onTap: () => launchUrl(Uri.parse("tel:100"))),
+            ListTile(leading: const Icon(Icons.security, color: Colors.red), title: const Text("Cyber Fraud (1930)"), onTap: () => launchUrl(Uri.parse("tel:1930"))),
+            ListTile(leading: const Icon(Icons.emergency, color: Colors.red), title: const Text("National Emergency (112)"), onTap: () => launchUrl(Uri.parse("tel:112"))),
+          ],
+        ),
       ),
     );
   }
-
-  Widget _buildOwnDocsTab() => const Center(child: Text("Own Docs Portals - Coming Soon"));
 }
