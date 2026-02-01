@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:external_app_launcher/external_app_launcher.dart';
-// Core logic and data links
+// CRITICAL FIX: Ensures main.dart can see the data variables
 import 'links_data.dart'; 
 
 void main() => runApp(const BestVerifierApp());
@@ -38,7 +38,6 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     _tabController = TabController(length: 2, vsync: this);
   }
 
-  // --- FEATURE 1: FIXED EMAIL LOGIC ---
   Future<void> _sendEmail() async {
     final String subject = Uri.encodeComponent("Best Verifier: App Feedback");
     final String body = Uri.encodeComponent("Sent from Best Verifier Mobile Side\n\n[Your Message Here]");
@@ -53,7 +52,6 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     }
   }
 
-  // --- FEATURE 2: AI SCANNER ONBOARDING (NEW) ---
   void _showScannerOnboarding() {
     showModalBottomSheet(
       context: context,
@@ -78,10 +76,7 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
             _stepRow(Icons.security, isHindi ? "गोपनीयता: कोई डेटा स्टोर नहीं होता, प्रोसेसिंग ऑन-डिवाइस है।" : "Privacy: No data is stored; all processing is local."),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                // Placeholder for Step 6: Triggering the Actual Camera Logic
-              },
+              onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0D47A1),
                 foregroundColor: Colors.white,
@@ -110,7 +105,6 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     );
   }
 
-  // --- FEATURE 3: STRATEGY MODAL ---
   void _showStrategyGuide() {
     showDialog(
       context: context,
@@ -173,7 +167,6 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
         children: [
           _buildDisclaimer(),
           const SizedBox(height: 15),
-          // AI SCANNER UI BLOCK
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
@@ -191,11 +184,6 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
                       const SizedBox(width: 10),
                       Text(isHindi ? "AI स्मार्ट स्कैनर" : "AI Smart Scanner", style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    isHindi ? "कैमरा का उपयोग करके दस्तावेज़ों को तेज़ी से पहचानें।" : "Identify documents instantly using your camera.",
-                    style: const TextStyle(fontSize: 12, color: Colors.black54),
                   ),
                   const SizedBox(height: 15),
                   ElevatedButton.icon(
@@ -265,9 +253,9 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
   Widget _buildDisclaimer() {
     return Container(
       width: double.infinity, padding: const EdgeInsets.all(12), color: Colors.amber.shade50,
-      child: Text(
-        isHindi ? "डिस्क्लेमर: हम एक निजी निर्देशिका हैं।" : "Disclaimer: We are a private directory.",
-        textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: Colors.brown),
+      child: const Text(
+        "Best Verifier is a private directory.",
+        textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Colors.brown),
       ),
     );
   }
