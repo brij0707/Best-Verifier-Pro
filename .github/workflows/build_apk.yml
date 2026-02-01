@@ -18,24 +18,24 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.27.0' # Updated for 2026 stability
           channel: 'stable'
 
       - name: Factory Reset & Structure Restoration
         run: |
-          # 1. Back up your logic and assets
+          # 1. Protect your custom logic and assets
           mkdir -p temp_safe
           cp -r lib temp_safe/ || true
           cp -r assets temp_safe/ || true
           cp pubspec.yaml temp_safe/ || true
           
-          # 2. Hard Reset: Remove potentially corrupted native files
+          # 2. Hard Reset: Wipe corrupted or outdated native configurations
           rm -rf android ios test .metadata .packages
           
-          # 3. Regenerate project with your specific Package Name
+          # 3. Regenerate project structure with clean 2026 templates
           flutter create . --org com.innomind.bestverifier --project-name best_verifier
           
-          # 4. Restore your files
+          # 4. Restore your work
           rm -rf lib assets pubspec.yaml
           mv temp_safe/lib .
           mv temp_safe/assets .
@@ -44,17 +44,18 @@ jobs:
 
       - name: Apply Android SDK & Visibility Fixes
         run: |
-          # FIX: Raise Min SDK to 21 for AI OCR compatibility (Required for 2026 AI Plugins)
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle
-          sed -i 's/minSdkVersion 19/minSdkVersion 21/g' android/app/build.gradle
+          # FIX 1: Force SDK 35 (Compile/Target) and SDK 21 (Min) for ML Kit
+          sed -i 's/compileSdkVersion .*/compileSdkVersion 35/g' android/app/build.gradle
+          sed -i 's/targetSdkVersion .*/targetSdkVersion 35/g' android/app/build.gradle
+          sed -i 's/minSdkVersion .*/minSdkVersion 21/g' android/app/build.gradle
           
-          # FIX: Inject <queries> for Face RD, Email, and Web redirection
+          # FIX 2: Inject <queries> for Face RD, Email, and Web redirection
           sed -i '/<application/i \    <queries>\n        <package android:name="in.net.uidai.qrcodescanner" />\n        <package android:name="in.gov.uidai.facerd" />\n        <intent><action android:name="android.intent.action.SENDTO" /><data android:scheme="mailto" /></intent>\n        <intent><action android:name="android.intent.action.VIEW" /><category android:name="android.intent.category.BROWSABLE" /><data android:scheme="https" /></intent>\n    </queries>' android/app/src/main/AndroidManifest.xml
 
       - name: Setup Dependencies
         run: |
           flutter pub get
-          # Pre-generate icons. '|| true' ensures the build continues even if logo.png is missing.
+          # Icon generation with a fallback to ensure the build never stops
           dart run flutter_launcher_icons || true
 
       - name: Build Final Release APK
@@ -63,5 +64,5 @@ jobs:
       - name: Deliver Repaired Build
         uses: actions/upload-artifact@v4
         with:
-          name: Best-Verifier-Foundation-Build
+          name: Best-Verifier-AI-Ready-APK
           path: build/app/outputs/flutter-apk/app-release.apk
