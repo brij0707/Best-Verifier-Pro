@@ -1,4 +1,4 @@
-name: Best Verifier - Master AI Build
+name: Best Verifier - Nuclear AI Build
 
 on:
   push:
@@ -27,43 +27,79 @@ jobs:
           cp -r lib temp_safe/ || true
           cp -r assets temp_safe/ || true
           cp pubspec.yaml temp_safe/ || true
-          
           rm -rf android ios test .metadata .packages
-          
           flutter create . --org com.innomind.bestverifier --project-name best_verifier
-          
           rm -rf lib assets pubspec.yaml
           mv temp_safe/lib .
           mv temp_safe/assets .
           mv temp_safe/pubspec.yaml .
           rm -rf temp_safe
 
-      - name: Apply Android SDK & R8 Fixes
+      - name: NUCLEAR FIX: Overwrite build.gradle
         run: |
-          # 1. Force SDK 35 and SDK 21 for ML Kit compatibility
-          sed -i 's/compileSdkVersion .*/compileSdkVersion 35/g' android/app/build.gradle
-          sed -i 's/targetSdkVersion .*/targetSdkVersion 35/g' android/app/build.gradle
-          sed -i 's/minSdkVersion .*/minSdkVersion 21/g' android/app/build.gradle
-          
-          # 2. CRITICAL FIX: Disable R8 Shrinking to stop 'Missing Classes' errors
-          # This specifically fixes the failures in 1769970206802.jpeg and 1769971932679.jpeg
-          sed -i '/buildTypes {/,/}/ s/minifyEnabled true/minifyEnabled false/g' android/app/build.gradle
-          sed -i '/buildTypes {/,/}/ s/shrinkResources true/shrinkResources false/g' android/app/build.gradle
-          
-          # 3. Inject <queries> for app visibility (Face RD, Email)
-          sed -i '/<application/i \    <queries>\n        <package android:name="in.net.uidai.qrcodescanner" />\n        <package android:name="in.gov.uidai.facerd" />\n        <intent><action android:name="android.intent.action.SENDTO" /><data android:scheme="mailto" /></intent>\n        <intent><action android:name="android.intent.action.VIEW" /><category android:name="android.intent.category.BROWSABLE" /><data android:scheme="https" /></intent>\n    </queries>' android/app/src/main/AndroidManifest.xml
+          # We write the ENTIRE build.gradle file from scratch.
+          # This guarantees SDK 35, MinSDK 21, and R8 Disabled.
+          cat <<EOF > android/app/build.gradle
+          plugins {
+              id "com.android.application"
+              id "kotlin-android"
+              id "dev.flutter.flutter-gradle-plugin"
+          }
 
-      - name: Setup Dependencies
+          android {
+              namespace "com.innomind.bestverifier"
+              compileSdk 35
+              ndkVersion flutter.ndkVersion
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_1_8
+                  targetCompatibility JavaVersion.VERSION_1_8
+              }
+
+              kotlinOptions {
+                  jvmTarget = '1.8'
+              }
+
+              sourceSets {
+                  main.java.srcDirs += 'src/main/kotlin'
+              }
+
+              defaultConfig {
+                  applicationId "com.innomind.bestverifier"
+                  // FIX: Forced MinSDK 21 for ML Kit
+                  minSdk 21
+                  targetSdk 35
+                  versionCode flutterVersionCode.toInteger()
+                  versionName flutterVersionName
+              }
+
+              buildTypes {
+                  release {
+                      // FIX: Disable R8 to prevent "Missing Class" errors
+                      minifyEnabled false
+                      shrinkResources false
+                      signingConfig signingConfigs.debug
+                  }
+              }
+          }
+
+          flutter {
+              source '../..'
+          }
+          EOF
+
+      - name: Inject Permissions & Queries
+        run: |
+          sed -i '/<application/i \    <queries>\n        <package android:name="in.net.uidai.qrcodescanner" />\n        <package android:name="in.gov.uidai.facerd" />\n        <intent><action android:name="android.intent.action.SENDTO" /><data android:scheme="mailto" /></intent>\n    </queries>' android/app/src/main/AndroidManifest.xml
+
+      - name: Build & Deliver
         run: |
           flutter pub get
-          # Skip icon generation if it fails to prevent stopping the build
           dart run flutter_launcher_icons || true
+          flutter build apk --release --no-tree-shake-icons
 
-      - name: Build Final Release APK
-        run: flutter build apk --release --no-tree-shake-icons
-
-      - name: Deliver Repaired Build
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Best-Verifier-Master-Build
+          name: Best-Verifier-Nuclear-Build
           path: build/app/outputs/flutter-apk/app-release.apk
