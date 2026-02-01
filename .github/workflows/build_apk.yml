@@ -1,4 +1,4 @@
-name: Super Repair & Build
+name: Best Verifier - AI Foundation Build
 
 on:
   push:
@@ -21,44 +21,47 @@ jobs:
           flutter-version: '3.19.0'
           channel: 'stable'
 
-      - name: Force Project Repair
+      - name: Factory Reset & Structure Restoration
         run: |
-          # 1. Back up your hard work (Logic & Branding)
-          mkdir temp_safe
-          cp -r lib temp_safe/
-          cp -r assets temp_safe/
-          cp pubspec.yaml temp_safe/
+          # 1. Back up your logic and assets
+          mkdir -p temp_safe
+          cp -r lib temp_safe/ || true
+          cp -r assets temp_safe/ || true
+          cp pubspec.yaml temp_safe/ || true
           
-          # 2. Delete the broken native folders
+          # 2. Hard Reset: Remove potentially corrupted native files
           rm -rf android ios test .metadata .packages
           
-          # 3. Factory Reset: Let Flutter generate a clean, modern v2 project
+          # 3. Regenerate project with your specific Package Name
           flutter create . --org com.innomind.bestverifier --project-name best_verifier
           
-          # 4. Restore your specific files
+          # 4. Restore your files
           rm -rf lib assets pubspec.yaml
           mv temp_safe/lib .
           mv temp_safe/assets .
           mv temp_safe/pubspec.yaml .
           rm -rf temp_safe
 
-      - name: Inject QR Whitelist
+      - name: Apply Android SDK & Visibility Fixes
         run: |
-          # This command manually injects the <queries> block into the fresh manifest
-          # so you don't have to do it by hand again.
-          sed -i '/<application/i \    <queries>\n        <package android:name="in.net.uidai.qrcodescanner" />\n        <package android:name="in.gov.uidai.pehchaan" />\n        <package android:name="in.gov.uidai.facerd" />\n    </queries>' android/app/src/main/AndroidManifest.xml
+          # FIX: Raise Min SDK to 21 for AI OCR compatibility (Required for 2026 AI Plugins)
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle
+          sed -i 's/minSdkVersion 19/minSdkVersion 21/g' android/app/build.gradle
+          
+          # FIX: Inject <queries> for Face RD, Email, and Web redirection
+          sed -i '/<application/i \    <queries>\n        <package android:name="in.net.uidai.qrcodescanner" />\n        <package android:name="in.gov.uidai.facerd" />\n        <intent><action android:name="android.intent.action.SENDTO" /><data android:scheme="mailto" /></intent>\n        <intent><action android:name="android.intent.action.VIEW" /><category android:name="android.intent.category.BROWSABLE" /><data android:scheme="https" /></intent>\n    </queries>' android/app/src/main/AndroidManifest.xml
 
-      - name: Get Dependencies
-        run: flutter pub get
+      - name: Setup Dependencies
+        run: |
+          flutter pub get
+          # Pre-generate icons. '|| true' ensures the build continues even if logo.png is missing.
+          dart run flutter_launcher_icons || true
 
-      - name: Generate App Icons
-        run: dart run flutter_launcher_icons
-
-      - name: Build APK
+      - name: Build Final Release APK
         run: flutter build apk --release --no-tree-shake-icons
 
-      - name: Upload APK
+      - name: Deliver Repaired Build
         uses: actions/upload-artifact@v4
         with:
-          name: best-verifier-repaired
+          name: Best-Verifier-Foundation-Build
           path: build/app/outputs/flutter-apk/app-release.apk
