@@ -18,44 +18,44 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0' # Updated for 2026 stability
+          flutter-version: '3.27.0'
           channel: 'stable'
 
       - name: Factory Reset & Structure Restoration
         run: |
-          # 1. Protect your custom logic and assets
           mkdir -p temp_safe
           cp -r lib temp_safe/ || true
           cp -r assets temp_safe/ || true
           cp pubspec.yaml temp_safe/ || true
           
-          # 2. Hard Reset: Wipe corrupted or outdated native configurations
           rm -rf android ios test .metadata .packages
           
-          # 3. Regenerate project structure with clean 2026 templates
           flutter create . --org com.innomind.bestverifier --project-name best_verifier
           
-          # 4. Restore your work
           rm -rf lib assets pubspec.yaml
           mv temp_safe/lib .
           mv temp_safe/assets .
           mv temp_safe/pubspec.yaml .
           rm -rf temp_safe
 
-      - name: Apply Android SDK & Visibility Fixes
+      - name: Apply Android SDK & R8 Fixes
         run: |
-          # FIX 1: Force SDK 35 (Compile/Target) and SDK 21 (Min) for ML Kit
+          # 1. Force SDK 35 and SDK 21 for ML Kit compatibility
           sed -i 's/compileSdkVersion .*/compileSdkVersion 35/g' android/app/build.gradle
           sed -i 's/targetSdkVersion .*/targetSdkVersion 35/g' android/app/build.gradle
           sed -i 's/minSdkVersion .*/minSdkVersion 21/g' android/app/build.gradle
           
-          # FIX 2: Inject <queries> for Face RD, Email, and Web redirection
+          # 2. CRITICAL FIX: Disable R8 Shrinking to prevent 'Missing Classes' error
+          # This fixes the error seen in your latest log
+          sed -i '/buildTypes {/,/}/ s/minifyEnabled true/minifyEnabled false/' android/app/build.gradle
+          sed -i '/buildTypes {/,/}/ s/shrinkResources true/shrinkResources false/' android/app/build.gradle
+          
+          # 3. Inject <queries> for Face RD, Email, and Web redirection
           sed -i '/<application/i \    <queries>\n        <package android:name="in.net.uidai.qrcodescanner" />\n        <package android:name="in.gov.uidai.facerd" />\n        <intent><action android:name="android.intent.action.SENDTO" /><data android:scheme="mailto" /></intent>\n        <intent><action android:name="android.intent.action.VIEW" /><category android:name="android.intent.category.BROWSABLE" /><data android:scheme="https" /></intent>\n    </queries>' android/app/src/main/AndroidManifest.xml
 
       - name: Setup Dependencies
         run: |
           flutter pub get
-          # Icon generation with a fallback to ensure the build never stops
           dart run flutter_launcher_icons || true
 
       - name: Build Final Release APK
@@ -64,5 +64,5 @@ jobs:
       - name: Deliver Repaired Build
         uses: actions/upload-artifact@v4
         with:
-          name: Best-Verifier-AI-Ready-APK
+          name: Best-Verifier-Final-Build
           path: build/app/outputs/flutter-apk/app-release.apk
