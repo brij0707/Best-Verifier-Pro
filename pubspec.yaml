@@ -1,8 +1,6 @@
 name: best_verifier
 description: A private directory and intelligent verification tool.
 publish_to: 'none'
-
-# App Version: name + build number
 version: 1.0.0+1
 
 environment:
@@ -11,26 +9,25 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
-  # 1. For opening web portals, emergency dialer, and email
   url_launcher: ^6.3.0
-
-  # 2. For launching external apps like Face RD and QR Scanner
   external_app_launcher: ^4.0.3
-
-  # 3. For the upcoming AI Scanner (OCR)
   google_mlkit_text_recognition: ^0.15.0
-
   cupertino_icons: ^1.0.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  # FIX: Added for the 'Generate App Icons' step
+  flutter_launcher_icons: ^0.13.1 
+
+# FIX: Configuration for app icons
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo.png"
 
 flutter:
   uses-material-design: true
-
-  # 4. Registered Assets: Place your logo here as assets/logo.png
   assets:
     - assets/
