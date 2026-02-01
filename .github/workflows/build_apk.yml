@@ -1,4 +1,4 @@
-name: Best Verifier - Final AI Repair Build
+name: Best Verifier - Master AI Build
 
 on:
   push:
@@ -41,22 +41,22 @@ jobs:
       - name: Apply Android SDK & R8 Fixes
         run: |
           # 1. Force SDK 35 and SDK 21 for ML Kit compatibility
-          # This fixes the error from log 1769968034932.jpeg
           sed -i 's/compileSdkVersion .*/compileSdkVersion 35/g' android/app/build.gradle
           sed -i 's/targetSdkVersion .*/targetSdkVersion 35/g' android/app/build.gradle
           sed -i 's/minSdkVersion .*/minSdkVersion 21/g' android/app/build.gradle
           
           # 2. CRITICAL FIX: Disable R8 Shrinking to stop 'Missing Classes' errors
-          # This specifically fixes the failures in 1769970206802.jpeg and 1769970844096.jpeg
-          sed -i '/buildTypes {/,/}/ s/minifyEnabled true/minifyEnabled false/' android/app/build.gradle
-          sed -i '/buildTypes {/,/}/ s/shrinkResources true/shrinkResources false/' android/app/build.gradle
+          # This specifically fixes the failures in 1769970206802.jpeg and 1769971932679.jpeg
+          sed -i '/buildTypes {/,/}/ s/minifyEnabled true/minifyEnabled false/g' android/app/build.gradle
+          sed -i '/buildTypes {/,/}/ s/shrinkResources true/shrinkResources false/g' android/app/build.gradle
           
-          # 3. Inject <queries> for Face RD and Email visibility
+          # 3. Inject <queries> for app visibility (Face RD, Email)
           sed -i '/<application/i \    <queries>\n        <package android:name="in.net.uidai.qrcodescanner" />\n        <package android:name="in.gov.uidai.facerd" />\n        <intent><action android:name="android.intent.action.SENDTO" /><data android:scheme="mailto" /></intent>\n        <intent><action android:name="android.intent.action.VIEW" /><category android:name="android.intent.category.BROWSABLE" /><data android:scheme="https" /></intent>\n    </queries>' android/app/src/main/AndroidManifest.xml
 
       - name: Setup Dependencies
         run: |
           flutter pub get
+          # Skip icon generation if it fails to prevent stopping the build
           dart run flutter_launcher_icons || true
 
       - name: Build Final Release APK
@@ -65,5 +65,5 @@ jobs:
       - name: Deliver Repaired Build
         uses: actions/upload-artifact@v4
         with:
-          name: Best-Verifier-Final-Build
+          name: Best-Verifier-Master-Build
           path: build/app/outputs/flutter-apk/app-release.apk
