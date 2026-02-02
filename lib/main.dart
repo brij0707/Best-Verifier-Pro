@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:external_app_launcher/external_app_launcher.dart';
-// CRITICAL FIX: Ensures main.dart can see the data variables
+import 'package:image_picker/image_picker.dart'; // Required for Camera
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart'; // Required for AI
 import 'links_data.dart'; 
+import 'ai_scanner.dart'; // Required for Auto-Judge
 
 void main() => runApp(const BestVerifierApp());
 
@@ -13,10 +15,7 @@ class BestVerifierApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true, 
-        colorSchemeSeed: const Color(0xFF0D47A1),
-      ),
+      theme: ThemeData(useMaterial3: true, colorSchemeSeed: const Color(0xFF0D47A1)),
       home: const MainTabScreen(),
     );
   }
@@ -38,6 +37,68 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     _tabController = TabController(length: 2, vsync: this);
   }
 
+  // --- CAMERA SCANNER LOGIC ---
+  Future<void> _startCameraScan() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.camera);
+      
+      if (image == null) return; // User cancelled
+
+      // Show processing indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(isHindi ? "AI विश्लेषण कर रहा है..." : "AI is analyzing...")),
+      );
+
+      final inputImage = InputImage.fromFilePath(image.path);
+      final textRecognizer = TextRecognizer();
+      final recognizedText = await textRecognizer.processImage(inputImage);
+      await textRecognizer.close();
+
+      // Pass text to the "Brain"
+      final result = AIScannerLogic.judgeDocument(recognizedText.text);
+
+      if (result != null) {
+        AIScannerLogic.copyToClipboard(result['id']!);
+        _showSuccessDialog(result);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(isHindi ? "कोई मान्य ID नहीं मिली (RC/PAN/CNR)" : "No valid RC, PAN, or CNR found.")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
+  }
+
+  void _showSuccessDialog(Map<String, String> result) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(children: [
+          const Icon(Icons.check_circle, color: Colors.green),
+          const SizedBox(width: 10),
+          Text(isHindi ? "सफल!" : "Success!")
+        ]),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(isHindi ? result['title_hi']! : result['title_en']!, style: const TextStyle(fontWeight: FontWeight.bold)),
+            const Divider(),
+            Text("ID: ${result['id']}", style: const TextStyle(fontSize: 18, color: Colors.blue, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            Text(isHindi ? "क्लिपबोर्ड पर कॉपी किया गया।" : "Copied to clipboard."),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("OK"))
+        ],
+      ),
+    );
+  }
+
+  // --- EXISTING UI & LOGIC ---
   Future<void> _sendEmail() async {
     final String subject = Uri.encodeComponent("Best Verifier: App Feedback");
     final String body = Uri.encodeComponent("Sent from Best Verifier Mobile Side\n\n[Your Message Here]");
@@ -56,51 +117,26 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
       builder: (context) => Padding(
         padding: const EdgeInsets.all(25),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)))),
+            Text(isHindi ? "AI स्मार्ट स्कैनर" : "AI Smart Scanner", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 15),
+            Text(isHindi ? "1. कैमरा खोलें\n2. RC, PAN या कोर्ट केस पर पॉइंट करें\n3. AI नंबर कॉपी करेगा" : "1. Open Camera\n2. Point at RC, PAN or Court Case\n3. AI auto-copies the ID"),
             const SizedBox(height: 20),
-            Text(
-              isHindi ? "AI स्कैनर कैसे काम करता है?" : "How AI Scanner Works?",
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF0D47A1)),
-            ),
-            const SizedBox(height: 20),
-            _stepRow(Icons.document_scanner, isHindi ? "कैमरा खोलें और दस्तावेज़ (RC, PAN, Court Case) पर केंद्रित करें।" : "Point camera at any ID or legal document."),
-            _stepRow(Icons.psychology, isHindi ? "AI स्वतः महत्वपूर्ण नंबरों की पहचान और एक्सट्रैक्शन करेगा।" : "AI auto-detects and extracts IDs like RC or CNR."),
-            _stepRow(Icons.content_copy, isHindi ? "नंबर क्लिपबोर्ड पर कॉपी हो जाएगा और सही टूल खुल जाएगा।" : "The ID is copied and the relevant portal opens."),
-            _stepRow(Icons.security, isHindi ? "गोपनीयता: कोई डेटा स्टोर नहीं होता, प्रोसेसिंग ऑन-डिवाइस है।" : "Privacy: No data is stored; all processing is local."),
-            const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0D47A1),
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 55),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Text(isHindi ? "समझ गया, शुरू करें" : "Got it, Start Scanning"),
-            ),
-            const SizedBox(height: 10),
+              onPressed: () {
+                Navigator.pop(context);
+                _startCameraScan(); // Trigger the camera
+              },
+              style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50), backgroundColor: const Color(0xFF0D47A1), foregroundColor: Colors.white),
+              child: Text(isHindi ? "स्कैन शुरू करें" : "Start Scan Now"),
+            )
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _stepRow(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Icon(icon, color: const Color(0xFF0D47A1), size: 28),
-          const SizedBox(width: 15),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 15, height: 1.4))),
-        ],
       ),
     );
   }
@@ -165,38 +201,16 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
     return SingleChildScrollView(
       child: Column(
         children: [
-          _buildDisclaimer(),
-          const SizedBox(height: 15),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0D47A1).withOpacity(0.05),
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: const Color(0xFF0D47A1).withOpacity(0.2)),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.auto_awesome, color: Color(0xFF0D47A1)),
-                      const SizedBox(width: 10),
-                      Text(isHindi ? "AI स्मार्ट स्कैनर" : "AI Smart Scanner", style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  const SizedBox(height: 15),
-                  ElevatedButton.icon(
-                    onPressed: _showScannerOnboarding,
-                    icon: const Icon(Icons.camera_alt),
-                    label: Text(isHindi ? "स्कैन शुरू करें" : "Start Smart Scan"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0D47A1),
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
-                  ),
-                ],
+           Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: ElevatedButton.icon(
+              onPressed: _showScannerOnboarding,
+              icon: const Icon(Icons.camera_alt),
+              label: Text(isHindi ? "AI स्मार्ट स्कैन शुरू करें" : "Start AI Smart Scan"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0D47A1),
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
               ),
             ),
           ),
@@ -247,16 +261,6 @@ class _MainTabScreenState extends State<MainTabScreen> with SingleTickerProvider
         )).toList(),
         _buildEmergencyButton(),
       ],
-    );
-  }
-
-  Widget _buildDisclaimer() {
-    return Container(
-      width: double.infinity, padding: const EdgeInsets.all(12), color: Colors.amber.shade50,
-      child: const Text(
-        "Best Verifier is a private directory.",
-        textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Colors.brown),
-      ),
     );
   }
 
